@@ -33,7 +33,7 @@ void main()
 
   // calculate normal in VCS
 
-  normal = (M * vec4(vertNormal, 0.0)).xyz;         // YOUR CODE HERE
+  normal = (MV * vec4(vertNormal, 0.0)).xyz;         // YOUR CODE HERE
 
   // Calculate the depth in [0,1]
 
