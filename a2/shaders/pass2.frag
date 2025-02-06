@@ -28,7 +28,7 @@ layout (location = 0) out mediump vec3 fragLaplacian;
 void main()
 
 {
-  mediump vec2 dummy = texCoords;  // REMOVE THIS ... It's just here because MacOS complains otherwise
+  // mediump vec2 dummy = texCoords;  // REMOVE THIS ... It's just here because MacOS complains otherwise
 
   // YOUR CODE HERE.  You will have to compute the Laplacian by
   // evaluating a 3x3 filter kernel at the current texture
@@ -41,6 +41,18 @@ void main()
   // Store a signed value for the Laplacian; do not take its absolute
   // value.
 
-  
-  fragLaplacian = vec3( 0.1, 0.2, 0.3 );
+  fragLaplacian = 8.0 * texture(depthSampler, texCoords).xyz;
+
+  for(int y = -1; y <= 1; y++) {
+    for(int x = -1; x <= 1; x++) {
+      // Skip the center pixel since we already handled it
+      if(x == 0 && y == 0) continue;
+        
+      // Calculate sample position and subtract from result (weight of -1)
+      mediump vec2 offset = vec2(float(x) * texCoordInc.x, float(y) * texCoordInc.y);
+      fragLaplacian -= texture(depthSampler, texCoords + offset).xyz;
+    }
+  }
+
+  // fragLaplacian = vec3( 0.1, 0.2, 0.3 );
 }
