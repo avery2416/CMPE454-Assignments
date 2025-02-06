@@ -31,16 +31,25 @@ void main()
   // the R component of the texture as texture2D( ... ).r
 
   // YOUR CODE HERE
+  // texture2D has been depricated so will be using texture( ... ).r instead
+  mediump float depth = texture(depthSampler, texCoords).r;
+  mediump float laplacian = texture(laplacianSampler, texCoords).r;
 
   // [1 mark] Discard the fragment if it is a background pixel not
   // near the silhouette of the object.
 
   // YOUR CODE HERE
+  // Discard fragment if background pixel
+  if (depth >= 1.0 && abs(laplacian) < 0.1)
+    discard;
 
   // [0 marks] Look up value for the colour and normal.  Use the RGB
   // components of the texture as texture2D( ... ).rgb or texture2D( ... ).xyz.
 
   // YOUR CODE HERE
+  mediump vec3 colour = texture(colourSampler, texCoords).rgb;
+  mediump vec3 normal = texture(normalSampler, texCoords).xyz;  
+
 
   // [2 marks] Compute Cel shading, in which the diffusely shaded
   // colour is quantized into four possible values.  Do not allow the
@@ -52,6 +61,9 @@ void main()
   const mediump float numQuanta = 3.0;
 
   // YOUR CODE HERE
+  mediump float NdotL = max(0.2, dot(normal, lightDir));
+  mediump float quantizedNdotL = floor(NdotL * numQuanta) / numQuanta;
+  mediump vec3 celColor = colour * quantizedNdotL;
 
   // [2 marks] Look at the fragments in the neighbourhood of
   // this fragment.  Your code should use the 'kernelRadius'
@@ -74,6 +86,26 @@ void main()
   const mediump float threshold = 0.1;
 
   // YOUR CODE HERE
+  mediump float minDist = kernelRadius;
+  mediump float maxDist = minDist;
+    
+  for (float i = -kernelRadius; i <= kernelRadius; i++) {
+    for (float j = -kernelRadius; j <= kernelRadius; j++) {
+      if (i == 0.0 && j == 0.0) 
+        continue;
+            
+      mediump vec2 offset = vec2(i, j) * texCoordInc;
+      mediump float neighborLaplacian = texture(laplacianSampler, texCoords + offset).r;
+            
+      if (abs(neighborLaplacian) > threshold) {
+        mediump float dist = length(vec2(i, j));
+        minDist = min(minDist, dist);
+      }
+    }
+  }
+
+  mediump float blendFactor = minDist / maxDist;
+
 
   // [1 mark] Output the fragment colour.  If there is an edge
   // fragment in the 3x3 neighbourhood of this fragment, output a grey
@@ -83,6 +115,8 @@ void main()
   // edge in the neighbourhood, output the cel-shaded colour.
   
   // YOUR CODE HERE
-
-  outputColour = vec4( 1.0, 0.0, 1.0, 1.0 );
+  if (minDist < maxDist)
+      outputColour = vec4(mix(vec3(0.0), celColor, blendFactor), 1.0);
+  else
+    outputColour = vec4(celColor, 1.0);
 }
