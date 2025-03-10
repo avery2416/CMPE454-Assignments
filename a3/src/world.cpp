@@ -194,6 +194,14 @@ void World::integrate( State *yStart, State *yEnd, float deltaT, bool &collision
 
   // [YOUR CODE HERE]
 
+  for (int i = 0; i < nSpheres; i++) {
+    y[i] = yStart[i];
+    yDeriv[i].x = y[i].v;
+    yDeriv[i].q = y[i].q.derivative(y[i].w);
+    yDeriv[i].v = GRAVITY_ACCEL;
+    yDeriv[i].w = ZERO_ANG_VELOCITY;
+  }
+
   // Integrate: Compute yEnd = yStart + deltaT * yDeriv
   //
   // Do this on the individual floats in 'y' and 'yDeriv'.  Do not
@@ -201,10 +209,28 @@ void World::integrate( State *yStart, State *yEnd, float deltaT, bool &collision
 
   // [YOUR CODE HERE]
 
+  // for (int i = 0; i < nSpheres; i++) {
+  //   yEnd[i].x = y[i].x + deltaT * yDeriv[i].x;
+  //   yEnd[i].q = y[i].q * (deltaT * yDeriv[i].q);
+  //   yEnd[i].q.normalize();
+  //   yEnd[i].v = y[i].v + deltaT * yDeriv[i].v;
+  //   yEnd[i].w = y[i].w + deltaT * yDeriv[i].w;
+  // }
+
+  for (int i = 0; i < nSpheres; i++) {
+    yEnd[i].x = y[i].x + deltaT * yDeriv[i].x;
+    yEnd[i].q.q0 = (deltaT * yDeriv[i].q.q0) * y[i].q.q0; // quaterions added by multiplying
+    yEnd[i].q.q1 = (deltaT * yDeriv[i].q.q1) * y[i].q.q1;
+    yEnd[i].q.q2 = (deltaT * yDeriv[i].q.q2) * y[i].q.q2;
+    yEnd[i].q.q3 = (deltaT * yDeriv[i].q.q3) * y[i].q.q3;
+    yEnd[i].v = y[i].v + deltaT * yDeriv[i].v;
+    yEnd[i].w = y[i].w + deltaT * yDeriv[i].w;
+  }
+
   // Copy yEnd state into sphere states
 
 
-  copyState( &spheres[0], yEnd );  // [----- DELETE THIS LINE !!!!  DO NOT ADD CODE HERE. -----]
+  // copyState( &spheres[0], yEnd );  // [----- DELETE THIS LINE !!!!  DO NOT ADD CODE HERE. -----]
 
 
   copyState( yEnd, &spheres[0] );
@@ -423,7 +449,7 @@ bool World::findCollisions( Sphere **collisionSphere, Object **collisionObject )
 
 	float relativeVelocitySign = (spheres[j].state.v - spheres[i].state.v) * centreToCentre;
 
-	if (true || relativeVelocitySign < 0) { // < 0 if coming together, > 0 is moving apart
+	if (relativeVelocitySign < 0) { // < 0 if coming together, > 0 is moving apart
 
 	  if (dist < minDist) {
 	    minDist = dist;
@@ -451,7 +477,7 @@ bool World::findCollisions( Sphere **collisionSphere, Object **collisionObject )
 
 	float relativeVelocitySign = (((spheres[i].state.x - rectangles[j].centre) * rectangles[j].normal) * rectangles[j].normal) * spheres[i].state.v;
 
-	if (true || relativeVelocitySign < 0) { // < 0 if coming together, > 0 is moving apart
+	if (relativeVelocitySign < 0) { // < 0 if coming together, > 0 is moving apart
 
 	  if (dist < minDist) {
 	    minDist = dist;
