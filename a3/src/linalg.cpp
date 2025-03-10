@@ -865,9 +865,31 @@ float pointToEdgeDistance( vec3 point, vec3 edgeTail, vec3 edgeHead, vec3 *close
 
 {
   // [YOUR CODE HERE: REPLACE THE CODE BELOW]
+
+  vec3 edgeVec = edgeHead - edgeTail;
+  vec3 pointVec = point - edgeTail;
+
+  float edgeLengthSquared = edgeVec.squaredLength();
+  if (edgeLengthSquared < 0.0000001) {
+    *closestPoint = edgeTail;
+    return pointVec.length();
+  }
+
+  // Calculate projection parameter (t)
+  float t = (pointVec * edgeVec) / edgeLengthSquared;
   
-  *closestPoint = vec3(0,0,0);
-  
-  return 9999;
+  // Clamp t to segment bounds
+  if (t < 0.0f) {
+      *closestPoint = edgeTail;
+      return pointVec.length();
+  }
+  else if (t > 1.0f) {
+      *closestPoint = edgeHead;
+      return (point - edgeHead).length();
+  }
+  else {
+      *closestPoint = edgeTail + t * edgeVec;
+      return (point - *closestPoint).length();
+  }
 }
 
