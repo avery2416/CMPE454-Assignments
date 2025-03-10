@@ -374,6 +374,43 @@ float World::updateStateByDeltaT( float deltaT )
 
 
     // [YOUR CODE HERE]
+
+    float low = 0.0f;
+    float high = deltaT;
+
+    State *yMid = new State[spheres.size()];
+
+    while (high - low > MIN_DELTA_T_FOR_COLLISIONS) {
+      float mid = (low + high) * 0.5f;
+        
+      // Integrate from beginning to mid point
+      bool midCollision;
+      Sphere *midCollisionSphere = NULL;
+      Object *midCollisionObject = NULL;
+      
+      integrate(yStart, yMid, mid, midCollision, &midCollisionSphere, &midCollisionObject);
+      
+      if (midCollision) {
+        // Collision occurs before or at mid point
+        high = mid;
+        // Update collision objects
+        collisionSphere = midCollisionSphere;
+        collisionObject = midCollisionObject;
+        // Update end state
+        copyState(yMid, yEnd);
+      } else {
+        // No collision at mid point, so it must occur after
+        low = mid;
+        // Update start state
+        copyState(yMid, yStart);
+      }
+    }
+
+    // Set actualDeltaT to the time just before collision
+    actualDeltaT = low;
+
+    // Clean up
+    delete [] yMid;
     
 
     // Set the sphere states to that at the START of the interval so
